@@ -20,9 +20,9 @@ import {
 	IconButton
   } from '@material-ui/core';
 
-import { Visibility, VisibilityOff } from '@material-ui/icons';
+import { AccountCircle, CloudUpload, Visibility, VisibilityOff } from '@material-ui/icons';
 
-import { makeStyles } from "@material-ui/core/styles";
+import { makeStyles, styled } from "@material-ui/core/styles";
 import { green } from "@material-ui/core/colors";
 
 import { i18n } from "../../translate/i18n";
@@ -33,6 +33,18 @@ import QueueSelect from "../QueueSelect";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { Can } from "../Can";
 import useWhatsApps from "../../hooks/useWhatsApps";
+
+const VisuallyHiddenInput = styled('input')({
+	clip: 'rect(0 0 0 0)',
+	clipPath: 'inset(50%)',
+	height: 1,
+	overflow: 'hidden',
+	position: 'absolute',
+	bottom: 0,
+	left: 0,
+	whiteSpace: 'nowrap',
+	width: 1,
+  });
 
 const useStyles = makeStyles(theme => ({
 	root: {
@@ -90,6 +102,8 @@ const UserModal = ({ open, onClose, userId }) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [whatsappId, setWhatsappId] = useState(false);
 	const {loading, whatsApps} = useWhatsApps();
+	const [file, setFile] = useState();
+	const [temporaryImage, setTemporaryImage] = useState(null);
 
 	useEffect(() => {
 		const fetchUser = async () => {
@@ -110,9 +124,11 @@ const UserModal = ({ open, onClose, userId }) => {
 		fetchUser();
 	}, [userId, open]);
 
-	const handleClose = () => {
+	const handleClose = async () => {
 		onClose();
 		setUser(initialState);
+		await api.delete(`/users/${user.id}/delete-temporary-image`)
+		setTemporaryImage(null)
 	};
 
 	const handleSaveUser = async values => {
@@ -120,15 +136,54 @@ const UserModal = ({ open, onClose, userId }) => {
 		try {
 			if (userId) {
 				await api.put(`/users/${userId}`, userData);
+				if (file) {
+					const formData = new FormData();
+					formData.append('file', file);
+					await api.post(`/users/${userId}/upload-image`, formData);
+				}
 			} else {
 				await api.post("/users", userData);
+				if (file) {
+					const formData = new FormData();
+					formData.append('file', file);
+					await api.post(`/users/${userId}/upload-image`, formData);
+				}
 			}
 			toast.success(i18n.t("userModal.success"));
 		} catch (err) {
-			toastError(err);
+			toast.error("Só são permitidas fotos com no máximo 2MB, e nos formatos PNG, JPG e JPEG");
+		} finally {
+			api.delete(`/users/${user.id}/delete-temporary-image`)
+			setTemporaryImage(null)
 		}
 		handleClose();
 	};
+
+	const handleChangeFile = async (e) => {
+		setFile(e.target.files[0]);
+		const formData = new FormData();
+		formData.append('file', e.target.files[0]);
+		try {
+			const response = await api.post(`/users/${user.id}/upload-temporary-image`, formData);
+			setTemporaryImage(response.data.image);
+		} catch (err) {
+			toast.error("Só são permitidas fotos com no máximo 2MB, e nos formatos PNG, JPG e JPEG")
+		}
+	}
+
+	const handleDeleteFile = async () => {
+		await api.delete(`/users/${user.id}/delete-image`);
+		setTemporaryImage(null)
+		setFile(null)
+		try {
+			const { data } = await api.get(`/users/${userId}`);
+			setUser(prevState => {
+				return { ...prevState, ...data };
+			});
+		} catch (err) {
+			toastError(err);
+		}
+	}
 
 	return (
 		<div className={classes.root}>
@@ -156,7 +211,12 @@ const UserModal = ({ open, onClose, userId }) => {
 					}}
 				>
 					{({ touched, errors, isSubmitting }) => (
-						<Form>
+						<Form style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+							{ (user.image || temporaryImage) ? <img 
+								src={temporaryImage ? `${process.env.REACT_APP_BACKEND_URL}public/uploads/temp/${temporaryImage}` : `${process.env.REACT_APP_BACKEND_URL}public/uploads/${user.image}`}
+								alt={user.name}
+								style={{ width: "300px", height: "300px", borderRadius: "50%", objectFit: "cover"}} />
+							: <AccountCircle style={{ width: "300px", height: "300px"}} />}
 							<DialogContent dividers>
 								<div className={classes.multFieldLine}>
 									<Field
@@ -245,6 +305,25 @@ const UserModal = ({ open, onClose, userId }) => {
 										/>
 									)}
 								/>
+								<div className={classes.multFieldLine} style={{alignItems: "center"}}>
+								<InputLabel id="image-selection-input-label">Foto de perfil</InputLabel>
+								<Button
+											component="label"
+											role={loggedInUser.profile}
+											variant="contained"
+											tabIndex={-1}
+											startIcon={<CloudUpload />}
+										>
+											Carregar
+											<Field as={VisuallyHiddenInput}
+												labelId="image-selection-input-label"
+												type="file"
+												name="file"
+												onChange={handleChangeFile}
+												capture="camera" />
+								</Button>
+								<Button variant="outlined" color="secondary" onClick={handleDeleteFile}>Remover Foto</Button>
+								</div>
 								<Can
 									role={loggedInUser.profile}
 									perform="user-modal:editQueues"

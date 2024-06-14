@@ -1,4 +1,6 @@
 import { Request, Response } from "express";
+import fs from "fs";
+import path from "path";
 import { getIO } from "../libs/socket";
 
 import CheckSettingsHelper from "../helpers/CheckSettings";
@@ -105,4 +107,77 @@ export const remove = async (
   });
 
   return res.status(200).json({ message: "User deleted" });
+};
+
+export const uploadImage = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { userId } = req.params;
+  const image = req.file?.filename;
+
+  const userExists = await ShowUserService(userId);
+  if (!userExists) {
+    throw new AppError("ERR_NO_USER", 404);
+  }
+
+  const user = await UpdateUserService({ userData: { image }, userId });
+
+  const io = getIO();
+  io.emit("user", {
+    action: "update",
+    user
+  });
+
+  return res.status(200).json(user);
+};
+
+export const deleteTemporaryImage = async (
+  _req: Request,
+  res: Response
+): Promise<Response> => {
+  const tempFolder = path.join(`${__dirname}../../../public/uploads/temp`);
+  if (fs.existsSync(tempFolder)) {
+    fs.readdirSync(tempFolder).forEach(file => {
+      const curPath = `${tempFolder}/${file}`;
+      if (fs.lstatSync(curPath).isDirectory()) {
+        fs.rmdirSync(curPath);
+      } else {
+        fs.unlinkSync(curPath);
+      }
+    });
+  } else {
+    throw new Error("uploads/temp folder not found");
+  }
+
+  return res.status(204);
+};
+
+export const deleteImage = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { userId } = req.params;
+
+  const userExists = await ShowUserService(userId);
+  if (!userExists) {
+    throw new AppError("ERR_NO_USER", 404);
+  }
+
+  const imagePath = path.join(
+    `${__dirname}../../../public/uploads/${userExists.image}`
+  );
+  if (fs.existsSync(imagePath)) {
+    fs.unlinkSync(imagePath);
+  }
+
+  const user = await UpdateUserService({ userData: { image: "" }, userId });
+
+  const io = getIO();
+  io.emit("user", {
+    action: "update",
+    user
+  });
+
+  return res.status(200).json(user);
 };
