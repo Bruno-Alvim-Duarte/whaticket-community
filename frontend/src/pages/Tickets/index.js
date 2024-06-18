@@ -1,14 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
-import { makeStyles } from "@material-ui/core/styles";
+import { alpha, makeStyles, styled } from "@material-ui/core/styles";
 
 import TicketsManager from "../../components/TicketsManager/";
 import Ticket from "../../components/Ticket/";
 
 import { i18n } from "../../translate/i18n";
 import Hidden from "@material-ui/core/Hidden";
+import { Button, InputBase } from "@material-ui/core";
+import CloseIcon from '@material-ui/icons/Close';
+import SearchIcon from "@material-ui/icons/Search";
+
 
 const useStyles = makeStyles((theme) => ({
   chatContainer: {
@@ -62,16 +66,49 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const Search = styled('div')(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha(theme.palette.common.black, 0.15),
+  '&:hover': {
+  backgroundColor: alpha(theme.palette.common.black, 0.25),
+  },
+  margin: theme.spacing(0, 2, 0, 2),
+  width: 'auto',
+}));
+
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: '100%',
+  position: 'absolute',
+  pointerEvents: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: 'inherit',
+  '& .MuiInputBase-input': {
+    padding: theme.spacing(1, 1, 1, 6),
+    // vertical padding + font size from searchIcon
+    width: '100%',
+  },
+  width: '100%',
+}));
+
+
 const Chat = () => {
   const classes = useStyles();
   const { ticketId } = useParams();
+  const [isSearching, setIsSearching] = useState(false);
 
   return (
     <div className={classes.chatContainer}>
       <div className={classes.chatPapper}>
         <Grid container spacing={0}>
           {/* <Grid item xs={4} className={classes.contactsWrapper}> */}
-          <Grid
+          {!isSearching && (<Grid
             item
             xs={12}
             md={4}
@@ -80,12 +117,12 @@ const Chat = () => {
             }
           >
             <TicketsManager />
-          </Grid>
+          </Grid>)}
           <Grid item xs={12} md={8} className={classes.messagessWrapper}>
             {/* <Grid item xs={8} className={classes.messagessWrapper}> */}
             {ticketId ? (
               <>
-                <Ticket />
+                <Ticket isSearching={isSearching} setIsSearching={setIsSearching} />
               </>
             ) : (
               <Hidden only={["sm", "xs"]}>
@@ -96,6 +133,26 @@ const Chat = () => {
               </Hidden>
             )}
           </Grid>
+          {isSearching && (<Grid
+            item
+            xs={12}
+            md={4}
+            className={classes.contactsWrapper}
+          >
+            <div style={ {display: "flex"}}>
+              <Button onClick={() => setIsSearching(false)}><CloseIcon/></Button>
+              <h1>Pesquisar mensagens</h1>
+            </div>
+            <Search>
+              <SearchIconWrapper>
+                <SearchIcon/>
+              </SearchIconWrapper>
+              <StyledInputBase
+                placeholder="Search…"
+               inputProps={{ 'aria-label': 'search' }}
+              />
+            </Search>
+          </Grid>)}
         </Grid>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useHistory } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import { IconButton } from "@material-ui/core";
 import { MoreVert, Replay } from "@material-ui/icons";
+import SearchIcon from "@material-ui/icons/Search";
 
 import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
@@ -24,7 +25,7 @@ const useStyles = makeStyles(theme => ({
 	},
 }));
 
-const TicketActionButtons = ({ ticket }) => {
+const TicketActionButtons = ({ ticket, setIsSearching, isSearching}) => {
 	const classes = useStyles();
 	const history = useHistory();
 	const [anchorEl, setAnchorEl] = useState(null);
@@ -90,6 +91,9 @@ const TicketActionButtons = ({ ticket }) => {
 						onClick={e => handleUpdateTicketStatus(e, "closed", user?.id)}
 					>
 						{i18n.t("messagesList.header.buttons.resolve")}
+					</ButtonWithSpinner>
+					<ButtonWithSpinner onClick={() => setIsSearching(!isSearching)}>
+						<SearchIcon style={{ color: "gray" }} />
 					</ButtonWithSpinner>
 					<IconButton onClick={handleOpenTicketOptionsMenu}>
 						<MoreVert />

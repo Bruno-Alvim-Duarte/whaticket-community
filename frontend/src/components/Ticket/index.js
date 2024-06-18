@@ -73,7 +73,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Ticket = () => {
+const Ticket = ({ isSearching, setIsSearching}) => {
   const { ticketId } = useParams();
   const history = useHistory();
   const classes = useStyles();
@@ -161,7 +161,7 @@ const Ticket = () => {
             />
           </div>
           <div className={classes.ticketActionButtons}>
-            <TicketActionButtons ticket={ticket} />
+            <TicketActionButtons ticket={ticket} setIsSearching={setIsSearching} isSearching={isSearching} />
           </div>
         </TicketHeader>
         <ReplyMessageProvider>
