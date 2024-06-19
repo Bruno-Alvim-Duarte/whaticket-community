@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
@@ -12,8 +12,7 @@ import Hidden from "@material-ui/core/Hidden";
 import { Button, InputBase } from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import SearchIcon from "@material-ui/icons/Search";
-
-
+import api from "../../services/api";
 const useStyles = makeStyles((theme) => ({
   chatContainer: {
     flex: 1,
@@ -27,6 +26,12 @@ const useStyles = makeStyles((theme) => ({
     // backgroundColor: "red",
     display: "flex",
     height: "100%",
+  },
+
+  messageWrapper: {
+    display: "flex",
+    height: "100%",
+    flexDirection: "column",
   },
 
   contactsWrapper: {
@@ -97,12 +102,42 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   width: '100%',
 }));
 
+const SearchBar = (props) => {
+  return (
+    <Search>
+      <SearchIconWrapper>
+        <SearchIcon/>
+      </SearchIconWrapper>
+      <StyledInputBase
+        placeholder="Search…"
+        inputProps={{ 'aria-label': 'search' }}
+        onChange={props.onChange}
+        value={props.value}
+      />
+    </Search>
+  )
+}
+
 
 const Chat = () => {
   const classes = useStyles();
   const { ticketId } = useParams();
   const [isSearching, setIsSearching] = useState(false);
+  const [searchTerm, setSearchTerm]  = useState("");
+  const [messagesSearched, setMessagesSearched] = useState([]);
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchTerm === "") {
+        setMessagesSearched([])
+      } else {
+        console.log(searchTerm)
+        console.log(ticketId)
+        api.get(`/messages/${ticketId}/search?q=${searchTerm}`).then((response) => setMessagesSearched(response.data));
+      }
+    }, 1000)
+    return () => clearTimeout(delayDebounceFn)
+  }, [searchTerm])
   return (
     <div className={classes.chatContainer}>
       <div className={classes.chatPapper}>
@@ -143,15 +178,15 @@ const Chat = () => {
               <Button onClick={() => setIsSearching(false)}><CloseIcon/></Button>
               <h1>Pesquisar mensagens</h1>
             </div>
-            <Search>
-              <SearchIconWrapper>
-                <SearchIcon/>
-              </SearchIconWrapper>
-              <StyledInputBase
-                placeholder="Search…"
-               inputProps={{ 'aria-label': 'search' }}
-              />
-            </Search>
+            <SearchBar onChange={(e) => setSearchTerm(e.target.value)} value={searchTerm} />
+            {messagesSearched.length > 0 && messagesSearched.map((message) => {
+              return (
+                <div key={message.id} className={classes.messageWrapper}>
+                  <p>{message.date}</p>
+                  <p>{message.name}:{message.body}</p>
+                </div>
+              )} 
+            )}
           </Grid>)}
         </Grid>
       </div>

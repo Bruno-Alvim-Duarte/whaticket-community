@@ -20,4 +20,6 @@ messageRoutes.post(
 
 messageRoutes.delete("/messages/:messageId", isAuth, MessageController.remove);
 
+messageRoutes.get("/messages/:ticketId/search", isAuth, MessageController.show);
+
 export default messageRoutes;
