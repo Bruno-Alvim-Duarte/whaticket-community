@@ -73,7 +73,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Ticket = ({ isSearching, setIsSearching}) => {
+const Ticket = ({ isSearching, setIsSearching, messageRefs, loadMoreMessages, setLoadMoreMessages}) => {
   const { ticketId } = useParams();
   const history = useHistory();
   const classes = useStyles();
@@ -168,6 +168,9 @@ const Ticket = ({ isSearching, setIsSearching}) => {
           <MessagesList
             ticketId={ticketId}
             isGroup={ticket.isGroup}
+            messageRefs={messageRefs}
+            loadMoreMessages={loadMoreMessages}
+            setLoadMoreMessages={setLoadMoreMessages}
           ></MessagesList>
           <MessageInput ticketStatus={ticket.status} />
         </ReplyMessageProvider>

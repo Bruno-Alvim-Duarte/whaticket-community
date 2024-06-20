@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
@@ -9,10 +9,12 @@ import Ticket from "../../components/Ticket/";
 
 import { i18n } from "../../translate/i18n";
 import Hidden from "@material-ui/core/Hidden";
-import { Button, InputBase } from "@material-ui/core";
+import { Button, CircularProgress, InputBase } from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import SearchIcon from "@material-ui/icons/Search";
 import api from "../../services/api";
+import { green } from "@material-ui/core/colors";
+
 const useStyles = makeStyles((theme) => ({
   chatContainer: {
     flex: 1,
@@ -30,8 +32,22 @@ const useStyles = makeStyles((theme) => ({
 
   messageWrapper: {
     display: "flex",
-    height: "100%",
     flexDirection: "column",
+    borderWidth: "0 0 2px 0",
+    borderStyle : "solid",
+    borderColor: "rgb(0,0,0,0.4)",
+    padding: "5px 16px",
+    cursor: "pointer",
+    justifyContent: "center",
+  },
+  
+  circleLoading: {
+    color: green[500],
+    position: "absolute",
+    opacity: "70%",
+    top: 0,
+    left: "50%",
+    marginTop: 12,
   },
 
   contactsWrapper: {
@@ -125,19 +141,58 @@ const Chat = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm]  = useState("");
   const [messagesSearched, setMessagesSearched] = useState([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadMoreMessages, setLoadMoreMessages] = useState(false);
+  const messageRefs = useRef({});
+  
+  const handleScrollToMessageSelected = (id) => {
+    console.log('chegou aqui')
+    console.log('id', id)
+    if (messageRefs.current[id]) {
+    console.log('chegou aqui')
+      messageRefs.current[id].scrollIntoView({ behavior: "smooth" });
+    } else {
+      setLoadMoreMessages(true);
+      setTimeout(() => {
+        handleScrollToMessageSelected(id);
+      }, 1500)
+    }
+  }
+
+  const handleScrollMessages = (e) => {
+    if (!hasMore) return;
+    const { scrollTop, scrollHeight } = e.currentTarget;
+
+    if (loading) {
+      return;
+    }
+
+    if (scrollHeight - scrollTop < 1000) {
+      setLoading(true);
+      setPageNumber((prevPageNumber) => prevPageNumber + 1);
+    }
+  };
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
+      setLoading(true);
       if (searchTerm === "") {
         setMessagesSearched([])
       } else {
         console.log(searchTerm)
         console.log(ticketId)
-        api.get(`/messages/${ticketId}/search?q=${searchTerm}`).then((response) => setMessagesSearched(response.data));
+        api.get(`/messages/${ticketId}/search?q=${searchTerm}&pageNumber=${pageNumber}`).then((response) => {
+          setMessagesSearched([...messagesSearched, ...response.data.messages])
+          setHasMore(response.data.hasMore)
+        });
       }
+      setLoading(false);
     }, 1000)
     return () => clearTimeout(delayDebounceFn)
-  }, [searchTerm])
+  }, [searchTerm, pageNumber, ticketId])
+  console.log(pageNumber);
   return (
     <div className={classes.chatContainer}>
       <div className={classes.chatPapper}>
@@ -157,7 +212,7 @@ const Chat = () => {
             {/* <Grid item xs={8} className={classes.messagessWrapper}> */}
             {ticketId ? (
               <>
-                <Ticket isSearching={isSearching} setIsSearching={setIsSearching} />
+                <Ticket setLoadMoreMessages={setLoadMoreMessages} loadMoreMessages={loadMoreMessages} messageRefs={messageRefs} isSearching={isSearching} setIsSearching={setIsSearching} />
               </>
             ) : (
               <Hidden only={["sm", "xs"]}>
@@ -179,14 +234,19 @@ const Chat = () => {
               <h1>Pesquisar mensagens</h1>
             </div>
             <SearchBar onChange={(e) => setSearchTerm(e.target.value)} value={searchTerm} />
+            <div style={{ overflowY: "scroll"}} onScroll={handleScrollMessages}>
             {messagesSearched.length > 0 && messagesSearched.map((message) => {
               return (
-                <div key={message.id} className={classes.messageWrapper}>
+                <div key={message.id} className={classes.messageWrapper} onClick={() => handleScrollToMessageSelected(message.id)}>
                   <p>{message.date}</p>
                   <p>{message.name}:{message.body}</p>
                 </div>
               )} 
             )}
+            </div>
+          { loading && <div>
+          <CircularProgress className={classes.circleLoading} />
+        </div>}
           </Grid>)}
         </Grid>
       </div>

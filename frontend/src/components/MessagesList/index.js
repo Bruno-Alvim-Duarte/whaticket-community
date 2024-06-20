@@ -307,7 +307,7 @@ const reducer = (state, action) => {
   }
 };
 
-const MessagesList = ({ ticketId, isGroup }) => {
+const MessagesList = ({ ticketId, isGroup, messageRefs, loadMoreMessages, setLoadMoreMessages }) => {
   const classes = useStyles();
 
   const [messagesList, dispatch] = useReducer(reducer, []);
@@ -357,6 +357,13 @@ const MessagesList = ({ ticketId, isGroup }) => {
       clearTimeout(delayDebounceFn);
     };
   }, [pageNumber, ticketId]);
+  
+  useEffect(() => {
+    if (loadMoreMessages) {
+      loadMore();
+      setLoadMoreMessages(false);
+    }
+  }, [loadMoreMessages]);
 
   useEffect(() => {
     const socket = openSocket();
@@ -598,7 +605,7 @@ const MessagesList = ({ ticketId, isGroup }) => {
             <React.Fragment key={message.id}>
               {renderDailyTimestamps(message, index)}
               {renderMessageDivider(message, index)}
-              <div className={classes.messageLeft}>
+              <div className={classes.messageLeft} ref={el => messageRefs.current[message.id] = el}>
                 <IconButton
                   variant="contained"
                   size="small"
@@ -632,7 +639,7 @@ const MessagesList = ({ ticketId, isGroup }) => {
             <React.Fragment key={message.id}>
               {renderDailyTimestamps(message, index)}
               {renderMessageDivider(message, index)}
-              <div className={classes.messageRight}>
+              <div className={classes.messageRight} ref={el => messageRefs.current[message.id] = el}>
                 <IconButton
                   variant="contained"
                   size="small"

@@ -78,19 +78,25 @@ export const remove = async (
 };
 
 export const show = async (req: Request, res: Response): Promise<Response> => {
-  const { q } = req.query;
+  const { q, pageNumber } = req.query;
   const { ticketId } = req.params;
   console.log("TicketId: ", ticketId);
   console.log("Query: ", q);
 
-  const messages = await Message.findAll({
+  const limit = 40;
+  const offset = limit * (Number(pageNumber) - 1);
+
+  const { count, rows: messages } = await Message.findAndCountAll({
     where: {
       [Op.and]: [
         { ticketId },
         { body: { [Op.regexp]: `(?i)[[:<:]][a-zA-Z]*${q}[a-zA-Z]*[[:>:]]` } }
       ]
     },
-    include: [{ model: Contact, as: "contact", attributes: ["name"] }]
+    include: [{ model: Contact, as: "contact", attributes: ["name"] }],
+    limit,
+    offset,
+    order: [["createdAt", "DESC"]]
   });
 
   const user = await User.findByPk(req.user.id);
@@ -103,5 +109,10 @@ export const show = async (req: Request, res: Response): Promise<Response> => {
     date: message.createdAt.toLocaleDateString("pt-BR")
   }));
 
-  return res.json(result);
+  const hasMore = count > offset + messages.length;
+
+  const response = { messages: result, hasMore };
+  console.log(response);
+
+  return res.json(response);
 };
