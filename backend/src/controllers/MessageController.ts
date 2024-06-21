@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 
-import { Op, literal } from "sequelize";
 import SetTicketMessagesAsRead from "../helpers/SetTicketMessagesAsRead";
 import { getIO } from "../libs/socket";
 import Message from "../models/Message";
@@ -10,8 +9,7 @@ import ShowTicketService from "../services/TicketServices/ShowTicketService";
 import DeleteWhatsAppMessage from "../services/WbotServices/DeleteWhatsAppMessage";
 import SendWhatsAppMedia from "../services/WbotServices/SendWhatsAppMedia";
 import SendWhatsAppMessage from "../services/WbotServices/SendWhatsAppMessage";
-import Contact from "../models/Contact";
-import User from "../models/User";
+import listMessagesSearchedService from "../services/MessageServices/ListMessagesSearchedSevice";
 
 type IndexQuery = {
   pageNumber: string;
@@ -77,48 +75,16 @@ export const remove = async (
   return res.send();
 };
 
-const removeAccents = (str: string): string => {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-};
-
 export const show = async (req: Request, res: Response): Promise<Response> => {
   const { q, pageNumber } = req.query;
   const { ticketId } = req.params;
-  console.log("TicketId: ", ticketId);
-  console.log("Query: ", q);
 
-  const limit = 40;
-  const offset = limit * (Number(pageNumber) - 1);
-  const query = removeAccents(q as string).toLowerCase();
-
-  const { count, rows: messages } = await Message.findAndCountAll({
-    where: {
-      [Op.and]: [
-        { ticketId },
-        literal(
-          `remove_accents(body) REGEXP '[[:<:]][a-zA-Z]*${query}[a-zA-Z]*[[:>:]]'`
-        )
-      ]
-    },
-    include: [{ model: Contact, as: "contact", attributes: ["name"] }],
-    limit,
-    offset,
-    order: [["createdAt", "DESC"]]
-  });
-
-  const user = await User.findByPk(req.user.id);
-
-  const result = messages.map(message => ({
-    id: message.id,
-    body: message.body,
-    name: message.fromMe ? user?.name : message.contact.name,
-    date: message.createdAt.toLocaleDateString("pt-BR")
-  }));
-
-  const hasMore = count > offset + messages.length;
-
-  const response = { messages: result, hasMore };
-  console.log(response);
+  const response = await listMessagesSearchedService(
+    ticketId,
+    pageNumber as string,
+    q as string,
+    req.user.id
+  );
 
   return res.json(response);
 };
