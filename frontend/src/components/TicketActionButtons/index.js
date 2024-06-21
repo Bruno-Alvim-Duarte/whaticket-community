@@ -25,7 +25,7 @@ const useStyles = makeStyles(theme => ({
 	},
 }));
 
-const TicketActionButtons = ({ ticket, setIsSearching, isSearching}) => {
+const TicketActionButtons = ({ ticket, setIsSearching, isSearching, setSearchSmallOpen}) => {
 	const classes = useStyles();
 	const history = useHistory();
 	const [anchorEl, setAnchorEl] = useState(null);
@@ -61,6 +61,13 @@ const TicketActionButtons = ({ ticket, setIsSearching, isSearching}) => {
 		}
 	};
 
+	const handleClickSearch = () => {
+		setIsSearching(!isSearching)
+		if (window.innerWidth < 600) {
+			setSearchSmallOpen(!isSearching)
+		}
+	}
+
 	return (
 		<div className={classes.actionButtons}>
 			{ticket.status === "closed" && (
@@ -92,7 +99,7 @@ const TicketActionButtons = ({ ticket, setIsSearching, isSearching}) => {
 					>
 						{i18n.t("messagesList.header.buttons.resolve")}
 					</ButtonWithSpinner>
-					<ButtonWithSpinner onClick={() => setIsSearching(!isSearching)}>
+					<ButtonWithSpinner onClick={handleClickSearch}>
 						<SearchIcon style={{ color: "gray" }} />
 					</ButtonWithSpinner>
 					<IconButton onClick={handleOpenTicketOptionsMenu}>

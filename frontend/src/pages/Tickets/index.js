@@ -43,11 +43,31 @@ const useStyles = makeStyles((theme) => ({
   
   circleLoading: {
     color: green[500],
+    marginTop: 20,
+    borderWidth: 0,
+  },
+
+  searchWrapper: {
+    display: "flex",
+    height: "100%",
+    flexDirection: "column",
+    overflowY: "hidden",
+  },
+
+  searchWrapperSmallOpen: {
+    display: "flex",
+    height: "100%",
+    flexDirection: "column",
+    overflowY: "hidden",
     position: "absolute",
-    opacity: "70%",
-    top: 0,
-    left: "50%",
-    marginTop: 12,
+    width: "320px",
+    flexShrink: 0,
+    right: 0,
+    backgroundColor: "rgb(214, 214, 214)",
+    transition: theme.transitions.create("margin", {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
   },
 
   contactsWrapper: {
@@ -145,13 +165,16 @@ const Chat = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadMoreMessages, setLoadMoreMessages] = useState(false);
+  const [searchSmallOpen, setSearchSmallOpen] = useState(false);
+  const [resetSearch, setResetSearch] = useState(false);
   const messageRefs = useRef({});
   
   const handleScrollToMessageSelected = (id) => {
-    console.log('chegou aqui')
-    console.log('id', id)
+    if (searchSmallOpen) {
+      setIsSearching(false);
+      setSearchSmallOpen(false);
+    }
     if (messageRefs.current[id]) {
-    console.log('chegou aqui')
       messageRefs.current[id].scrollIntoView({ behavior: "smooth" });
     } else {
       setLoadMoreMessages(true);
@@ -178,21 +201,27 @@ const Chat = () => {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       setLoading(true);
-      if (searchTerm === "") {
+      if (resetSearch) {
         setMessagesSearched([])
-      } else {
-        console.log(searchTerm)
-        console.log(ticketId)
-        api.get(`/messages/${ticketId}/search?q=${searchTerm}&pageNumber=${pageNumber}`).then((response) => {
-          setMessagesSearched([...messagesSearched, ...response.data.messages])
-          setHasMore(response.data.hasMore)
-        });
+        setResetSearch(false);
+      } 
+      if (searchTerm === "") {
+        setLoading(false)
+        return
       }
+      api.get(`/messages/${ticketId}/search?q=${searchTerm}&pageNumber=${pageNumber}`).then((response) => {
+        setMessagesSearched((prevMessagesSearched) => [...prevMessagesSearched, ...response.data.messages])
+        setHasMore(response.data.hasMore)
+      });
       setLoading(false);
     }, 1000)
     return () => clearTimeout(delayDebounceFn)
   }, [searchTerm, pageNumber, ticketId])
-  console.log(pageNumber);
+
+  useEffect(() => {
+    setResetSearch(true);
+    setPageNumber(1);
+  }, [searchTerm, ticketId])
   return (
     <div className={classes.chatContainer}>
       <div className={classes.chatPapper}>
@@ -212,7 +241,7 @@ const Chat = () => {
             {/* <Grid item xs={8} className={classes.messagessWrapper}> */}
             {ticketId ? (
               <>
-                <Ticket setLoadMoreMessages={setLoadMoreMessages} loadMoreMessages={loadMoreMessages} messageRefs={messageRefs} isSearching={isSearching} setIsSearching={setIsSearching} />
+                <Ticket setSearchSmallOpen={setSearchSmallOpen} setLoadMoreMessages={setLoadMoreMessages} loadMoreMessages={loadMoreMessages} messageRefs={messageRefs} isSearching={isSearching} setIsSearching={setIsSearching} />
               </>
             ) : (
               <Hidden only={["sm", "xs"]}>
@@ -227,11 +256,11 @@ const Chat = () => {
             item
             xs={12}
             md={4}
-            className={classes.contactsWrapper}
+            className={ searchSmallOpen ? classes.searchWrapperSmallOpen : classes.searchWrapper}
           >
             <div style={ {display: "flex"}}>
               <Button onClick={() => setIsSearching(false)}><CloseIcon/></Button>
-              <h1>Pesquisar mensagens</h1>
+              <h3>Pesquisar mensagens</h3>
             </div>
             <SearchBar onChange={(e) => setSearchTerm(e.target.value)} value={searchTerm} />
             <div style={{ overflowY: "scroll"}} onScroll={handleScrollMessages}>
@@ -244,9 +273,9 @@ const Chat = () => {
               )} 
             )}
             </div>
-          { loading && <div>
-          <CircularProgress className={classes.circleLoading} />
-        </div>}
+            { loading && <div style={{ display: "flex", justifyContent: "center" }}>
+            <CircularProgress className={classes.circleLoading} />
+            </div>}
           </Grid>)}
         </Grid>
       </div>

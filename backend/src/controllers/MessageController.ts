@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { Op } from "sequelize";
+import { Op, literal } from "sequelize";
 import SetTicketMessagesAsRead from "../helpers/SetTicketMessagesAsRead";
 import { getIO } from "../libs/socket";
 import Message from "../models/Message";
@@ -77,6 +77,10 @@ export const remove = async (
   return res.send();
 };
 
+const removeAccents = (str: string): string => {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+};
+
 export const show = async (req: Request, res: Response): Promise<Response> => {
   const { q, pageNumber } = req.query;
   const { ticketId } = req.params;
@@ -85,12 +89,15 @@ export const show = async (req: Request, res: Response): Promise<Response> => {
 
   const limit = 40;
   const offset = limit * (Number(pageNumber) - 1);
+  const query = removeAccents(q as string).toLowerCase();
 
   const { count, rows: messages } = await Message.findAndCountAll({
     where: {
       [Op.and]: [
         { ticketId },
-        { body: { [Op.regexp]: `(?i)[[:<:]][a-zA-Z]*${q}[a-zA-Z]*[[:>:]]` } }
+        literal(
+          `remove_accents(body) REGEXP '[[:<:]][a-zA-Z]*${query}[a-zA-Z]*[[:>:]]'`
+        )
       ]
     },
     include: [{ model: Contact, as: "contact", attributes: ["name"] }],
@@ -101,7 +108,6 @@ export const show = async (req: Request, res: Response): Promise<Response> => {
 
   const user = await User.findByPk(req.user.id);
 
-  console.log("messages: ", messages);
   const result = messages.map(message => ({
     id: message.id,
     body: message.body,
