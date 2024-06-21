@@ -33,7 +33,7 @@ const listMessagesSearchedService = async (
       [Op.and]: [
         { ticketId },
         literal(
-          `remove_accents(body) REGEXP '[[:<:]][a-zA-Z]*${query}[a-zA-Z]*[[:>:]]'`
+          `normalize_text(body) REGEXP '[[:<:]][a-zA-Z]*${query}[a-zA-Z]*[[:>:]]'`
         )
       ]
     },
