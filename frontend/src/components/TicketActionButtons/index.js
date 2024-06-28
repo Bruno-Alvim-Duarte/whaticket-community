@@ -12,6 +12,7 @@ import TicketOptionsMenu from "../TicketOptionsMenu";
 import ButtonWithSpinner from "../ButtonWithSpinner";
 import toastError from "../../errors/toastError";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SearchContext } from "../../context/Search/SearchContext";
 
 const useStyles = makeStyles(theme => ({
 	actionButtons: {
@@ -25,13 +26,14 @@ const useStyles = makeStyles(theme => ({
 	},
 }));
 
-const TicketActionButtons = ({ ticket, setIsSearching, isSearching, setSearchSmallOpen}) => {
+const TicketActionButtons = ({ ticket }) => {
 	const classes = useStyles();
 	const history = useHistory();
 	const [anchorEl, setAnchorEl] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const ticketOptionsMenuOpen = Boolean(anchorEl);
 	const { user } = useContext(AuthContext);
+	const { setIsSearching, isSearching, setSearchSmallOpen } = useContext(SearchContext);
 
 	const handleOpenTicketOptionsMenu = e => {
 		setAnchorEl(e.currentTarget);

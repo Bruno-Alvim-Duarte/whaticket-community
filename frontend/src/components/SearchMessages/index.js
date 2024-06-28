@@ -1,9 +1,10 @@
 import { Button, CircularProgress, Grid, InputBase, alpha, makeStyles, styled } from '@material-ui/core'
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import CloseIcon from '@material-ui/icons/Close';
 import { green } from '@material-ui/core/colors';
 import SearchIcon from "@material-ui/icons/Search";
 import api from "../../services/api";
+import { SearchContext } from '../../context/Search/SearchContext';
 
 const useStyle = makeStyles((theme) => ({
   searchWrapperSmallOpen: {
@@ -93,7 +94,7 @@ const SearchBar = (props) => {
   )
 }
 
-const SearchMessages = ({setIsSearching, setLoadMoreMessages,searchSmallOpen, setSearchSmallOpen, messageRefs, ticketId}) => {
+const SearchMessages = ({ticketId}) => {
   const classes = useStyle();
   const [searchTerm, setSearchTerm]  = useState("");
   const [messagesSearched, setMessagesSearched] = useState([]);
@@ -101,6 +102,7 @@ const SearchMessages = ({setIsSearching, setLoadMoreMessages,searchSmallOpen, se
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false)
   const [resetSearch, setResetSearch] = useState(false);
+  const { setIsSearching, setLoadMoreMessages, searchSmallOpen, setSearchSmallOpen, messageRefs } = useContext(SearchContext);
 
 
   const handleScrollToMessageSelected = (id) => {

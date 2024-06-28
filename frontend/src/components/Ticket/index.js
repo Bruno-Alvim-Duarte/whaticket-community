@@ -73,7 +73,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Ticket = ({ isSearching, setIsSearching, messageRefs, loadMoreMessages, setLoadMoreMessages, setSearchSmallOpen}) => {
+const Ticket = () => {
   const { ticketId } = useParams();
   const history = useHistory();
   const classes = useStyles();
@@ -161,16 +161,13 @@ const Ticket = ({ isSearching, setIsSearching, messageRefs, loadMoreMessages, se
             />
           </div>
           <div className={classes.ticketActionButtons}>
-            <TicketActionButtons ticket={ticket} setIsSearching={setIsSearching} isSearching={isSearching} setSearchSmallOpen={setSearchSmallOpen} />
+            <TicketActionButtons ticket={ticket} />
           </div>
         </TicketHeader>
         <ReplyMessageProvider>
           <MessagesList
             ticketId={ticketId}
             isGroup={ticket.isGroup}
-            messageRefs={messageRefs}
-            loadMoreMessages={loadMoreMessages}
-            setLoadMoreMessages={setLoadMoreMessages}
           ></MessagesList>
           <MessageInput ticketStatus={ticket.status} />
         </ReplyMessageProvider>

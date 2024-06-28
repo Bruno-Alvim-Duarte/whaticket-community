@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useRef } from "react";
+import React, { useState, useEffect, useReducer, useRef, useContext } from "react";
 
 import { isSameDay, parseISO, format } from "date-fns";
 import openSocket from "../../services/socket-io";
@@ -31,6 +31,7 @@ import whatsBackground from "../../assets/wa-background.png";
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import Audio from "../Audio";
+import { SearchContext } from "../../context/Search/SearchContext";
 
 const useStyles = makeStyles((theme) => ({
   messagesListWrapper: {
@@ -307,7 +308,7 @@ const reducer = (state, action) => {
   }
 };
 
-const MessagesList = ({ ticketId, isGroup, messageRefs, loadMoreMessages, setLoadMoreMessages }) => {
+const MessagesList = ({ ticketId, isGroup, }) => {
   const classes = useStyles();
 
   const [messagesList, dispatch] = useReducer(reducer, []);
@@ -320,6 +321,7 @@ const MessagesList = ({ ticketId, isGroup, messageRefs, loadMoreMessages, setLoa
   const [anchorEl, setAnchorEl] = useState(null);
   const messageOptionsMenuOpen = Boolean(anchorEl);
   const currentTicketId = useRef(ticketId);
+  const { messageRefs, loadMoreMessages, setLoadMoreMessages } = useContext(SearchContext);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
