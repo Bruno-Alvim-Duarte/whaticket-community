@@ -31,7 +31,7 @@ const listMessagesSearchedService = async (
   const { ticketId, pageNumber, q, userId } = queryParameters;
   const limit = 40;
   const offset = limit * (Number(pageNumber) - 1);
-  const query = removeAccents(q as string).toLowerCase();
+  const query = removeAccents(q).toLowerCase();
 
   const { count, rows: messages } = await Message.findAndCountAll({
     where: {
