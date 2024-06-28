@@ -1,4 +1,4 @@
-import { Op, literal, fn, col } from "sequelize";
+import { Op, fn, col, where } from "sequelize";
 import Contact from "../../models/Contact";
 import Message from "../../models/Message";
 import User from "../../models/User";
@@ -31,9 +31,13 @@ const listMessagesSearchedService = async (
     where: {
       [Op.and]: [
         { ticketId },
-        literal(
-          `normalize_text(body) REGEXP '[[:<:]][a-zA-Z]*${query}[a-zA-Z]*[[:>:]]'`
-        )
+        {
+          body: where(
+            fn("normalize_text", col("body")),
+            "LIKE",
+            `%${query.trim()}%`
+          )
+        }
       ]
     },
     include: [
