@@ -18,12 +18,17 @@ type response = {
   hasMore: boolean;
 };
 
+type parameters = {
+  ticketId: string;
+  pageNumber: string;
+  q: string;
+  userId: string;
+};
+
 const listMessagesSearchedService = async (
-  ticketId: string,
-  pageNumber: string,
-  q: string,
-  userId: string
+  queryParameters: parameters
 ): Promise<response> => {
+  const { ticketId, pageNumber, q, userId } = queryParameters;
   const limit = 40;
   const offset = limit * (Number(pageNumber) - 1);
   const query = removeAccents(q as string).toLowerCase();
