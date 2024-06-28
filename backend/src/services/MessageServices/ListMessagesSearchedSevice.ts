@@ -1,20 +1,15 @@
-import { Op, literal } from "sequelize";
+import { Op, literal, fn, col } from "sequelize";
 import Contact from "../../models/Contact";
 import Message from "../../models/Message";
 import User from "../../models/User";
+import Ticket from "../../models/Ticket";
 
 const removeAccents = (str: string): string => {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };
 
 type response = {
-  messages: {
-    id: string;
-    body: string;
-    name?: string;
-    date: string;
-  }[];
-
+  messages: Message[];
   hasMore: boolean;
 };
 
@@ -22,13 +17,12 @@ type parameters = {
   ticketId: string;
   pageNumber: string;
   q: string;
-  userId: string;
 };
 
 const listMessagesSearchedService = async (
   queryParameters: parameters
 ): Promise<response> => {
-  const { ticketId, pageNumber, q, userId } = queryParameters;
+  const { ticketId, pageNumber, q } = queryParameters;
   const limit = 40;
   const offset = limit * (Number(pageNumber) - 1);
   const query = removeAccents(q).toLowerCase();
@@ -42,23 +36,36 @@ const listMessagesSearchedService = async (
         )
       ]
     },
-    include: [{ model: Contact, as: "contact", attributes: ["name"] }],
+    include: [
+      { model: Contact, as: "contact", attributes: ["name"] },
+      {
+        model: Ticket,
+        as: "ticket",
+        attributes: [],
+        include: [{ model: User, as: "user", attributes: ["name"] }]
+      }
+    ],
+    attributes: [
+      "id",
+      "body",
+      [fn("DATE_FORMAT", col("Message.createdAt"), "%d/%m/%Y"), "date"],
+      [
+        fn(
+          "IF",
+          col("Message.fromMe"),
+          col("ticket.user.name"),
+          col("contact.name")
+        ),
+        "name"
+      ]
+    ],
     limit,
     offset,
     order: [["createdAt", "DESC"]]
   });
 
-  const user = await User.findByPk(userId);
-
-  const result = messages.map(message => ({
-    id: message.id,
-    body: message.body,
-    name: message.fromMe ? user?.name : message.contact.name,
-    date: message.createdAt.toLocaleDateString("pt-BR")
-  }));
-
   const hasMore = count > offset + messages.length;
-  return { messages: result, hasMore };
+  return { messages, hasMore };
 };
 
 export default listMessagesSearchedService;

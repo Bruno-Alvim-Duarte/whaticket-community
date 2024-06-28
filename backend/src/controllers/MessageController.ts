@@ -86,8 +86,7 @@ export const show = async (req: Request, res: Response): Promise<Response> => {
   const response = await listMessagesSearchedService({
     ticketId,
     pageNumber,
-    q,
-    userId: req.user.id
+    q
   });
 
   return res.json(response);
