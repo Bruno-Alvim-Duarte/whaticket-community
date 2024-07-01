@@ -14,8 +14,8 @@ type response = {
 };
 
 type parameters = {
-  ticketId: string;
-  pageNumber: string;
+  ticketId: number;
+  pageNumber: number;
   q: string;
 };
 

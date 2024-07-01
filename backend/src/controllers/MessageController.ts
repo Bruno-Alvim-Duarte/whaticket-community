@@ -79,13 +79,18 @@ export const show = async (req: Request, res: Response): Promise<Response> => {
   const { q, pageNumber } = req.query;
   const { ticketId } = req.params;
 
-  if (typeof pageNumber !== "string" || typeof q !== "string") {
+  if (
+    typeof pageNumber !== "string" ||
+    typeof q !== "string" ||
+    Number.isNaN(Number(ticketId)) ||
+    Number.isNaN(Number(pageNumber))
+  ) {
     return res.status(400).json({ message: "Invalid query parameters" });
   }
 
   const response = await listMessagesSearchedService({
-    ticketId,
-    pageNumber,
+    ticketId: Number(ticketId),
+    pageNumber: Number(pageNumber),
     q
   });
 
