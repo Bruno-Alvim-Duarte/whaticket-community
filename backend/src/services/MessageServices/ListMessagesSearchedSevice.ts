@@ -25,7 +25,11 @@ const listMessagesSearchedService = async (
   const { ticketId, pageNumber, q } = queryParameters;
   const limit = 40;
   const offset = limit * (Number(pageNumber) - 1);
-  const query = removeAccents(q).toLowerCase();
+  const query = removeAccents(q).toLowerCase().trim();
+  if (query.length < 1) {
+    return { messages: [], hasMore: false };
+  }
+  const sanitizedQuery = query.replace(/%/g, "\\%").replace(/_/g, "\\_");
 
   const { count, rows: messages } = await Message.findAndCountAll({
     where: {
@@ -35,7 +39,7 @@ const listMessagesSearchedService = async (
           body: where(
             fn("normalize_text", col("body")),
             "LIKE",
-            `%${query.trim()}%`
+            `%${sanitizedQuery}%`
           )
         }
       ]
