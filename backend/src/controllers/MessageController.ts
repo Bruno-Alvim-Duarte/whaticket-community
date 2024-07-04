@@ -88,11 +88,15 @@ export const show = async (req: Request, res: Response): Promise<Response> => {
     return res.status(400).json({ message: "Invalid query parameters" });
   }
 
-  const response = await listMessagesSearchedService({
-    ticketId: Number(ticketId),
-    pageNumber: Number(pageNumber),
-    q
-  });
+  try {
+    const response = await listMessagesSearchedService({
+      ticketId: Number(ticketId),
+      pageNumber: Number(pageNumber),
+      q
+    });
 
-  return res.json(response);
+    return res.json(response);
+  } catch (err) {
+    return res.status(404).json({ message: "Ticket not found" });
+  }
 };

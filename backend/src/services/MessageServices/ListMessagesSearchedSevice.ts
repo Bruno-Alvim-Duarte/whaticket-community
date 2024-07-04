@@ -31,6 +31,11 @@ const listMessagesSearchedService = async (
   }
   const sanitizedQuery = query.replace(/%/g, "\\%").replace(/_/g, "\\_");
 
+  const ticket = await Ticket.findByPk(ticketId);
+  if (!ticket) {
+    throw new Error("Ticket not found");
+  }
+
   const { count, rows: messages } = await Message.findAndCountAll({
     where: {
       [Op.and]: [
