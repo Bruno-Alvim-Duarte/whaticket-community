@@ -167,8 +167,21 @@ export const deleteImage = async (
   const imagePath = path.join(
     `${__dirname}../../../public/uploads/${userExists.image}`
   );
-  if (fs.existsSync(imagePath)) {
+  const imageTemporaryPath = path.join(
+    `${__dirname}../../../public/uploads/temp`
+  );
+  if (userExists.image && fs.existsSync(imagePath)) {
     fs.unlinkSync(imagePath);
+  }
+  if (fs.existsSync(imageTemporaryPath)) {
+    fs.readdirSync(imageTemporaryPath).forEach(file => {
+      const curPath = `${imageTemporaryPath}/${file}`;
+      if (fs.lstatSync(curPath).isDirectory()) {
+        fs.rmdirSync(curPath);
+      } else {
+        fs.unlinkSync(curPath);
+      }
+    });
   }
 
   const user = await UpdateUserService({ userData: { image: "" }, userId });

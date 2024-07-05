@@ -151,7 +151,7 @@ const UserModal = ({ open, onClose, userId }) => {
 			}
 			toast.success(i18n.t("userModal.success"));
 		} catch (err) {
-			toast.error("Só são permitidas fotos com no máximo 2MB, e nos formatos PNG, JPG e JPEG");
+			toast.warn("Só são permitidas fotos com no máximo 2MB, e nos formatos PNG, JPG e JPEG");
 		} finally {
 			api.delete(`/users/${user.id}/delete-temporary-image`)
 			setTemporaryImage(null)
@@ -167,7 +167,7 @@ const UserModal = ({ open, onClose, userId }) => {
 			const response = await api.post(`/users/${user.id}/upload-temporary-image`, formData);
 			setTemporaryImage(response.data.image);
 		} catch (err) {
-			toast.error("Só são permitidas fotos com no máximo 2MB, e nos formatos PNG, JPG e JPEG")
+			toast.warn("Só são permitidas fotos com no máximo 2MB, e nos formatos PNG, JPG e JPEG")
 		}
 	}
 
