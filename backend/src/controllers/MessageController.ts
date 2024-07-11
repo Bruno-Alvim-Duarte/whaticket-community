@@ -9,6 +9,7 @@ import ShowTicketService from "../services/TicketServices/ShowTicketService";
 import DeleteWhatsAppMessage from "../services/WbotServices/DeleteWhatsAppMessage";
 import SendWhatsAppMedia from "../services/WbotServices/SendWhatsAppMedia";
 import SendWhatsAppMessage from "../services/WbotServices/SendWhatsAppMessage";
+import listMessagesSearchedService from "../services/MessageServices/ListMessagesSearchedSevice";
 
 type IndexQuery = {
   pageNumber: string;
@@ -72,4 +73,30 @@ export const remove = async (
   });
 
   return res.send();
+};
+
+export const show = async (req: Request, res: Response): Promise<Response> => {
+  const { q, pageNumber } = req.query;
+  const { ticketId } = req.params;
+
+  if (
+    typeof pageNumber !== "string" ||
+    typeof q !== "string" ||
+    Number.isNaN(Number(ticketId)) ||
+    Number.isNaN(Number(pageNumber))
+  ) {
+    return res.status(400).json({ message: "Invalid query parameters" });
+  }
+
+  try {
+    const response = await listMessagesSearchedService({
+      ticketId: Number(ticketId),
+      pageNumber: Number(pageNumber),
+      q
+    });
+
+    return res.json(response);
+  } catch (err) {
+    return res.status(404).json({ message: "Ticket not found" });
+  }
 };

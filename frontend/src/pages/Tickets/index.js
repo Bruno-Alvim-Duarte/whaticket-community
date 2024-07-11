@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
@@ -9,6 +9,8 @@ import Ticket from "../../components/Ticket/";
 
 import { i18n } from "../../translate/i18n";
 import Hidden from "@material-ui/core/Hidden";
+import SearchMessages from "../../components/SearchMessages";
+import { SearchContext } from "../../context/Search/SearchContext";
 
 const useStyles = makeStyles((theme) => ({
   chatContainer: {
@@ -65,13 +67,14 @@ const useStyles = makeStyles((theme) => ({
 const Chat = () => {
   const classes = useStyles();
   const { ticketId } = useParams();
+  const { isSearching } = useContext(SearchContext)
 
   return (
     <div className={classes.chatContainer}>
       <div className={classes.chatPapper}>
         <Grid container spacing={0}>
           {/* <Grid item xs={4} className={classes.contactsWrapper}> */}
-          <Grid
+          {!isSearching && (<Grid
             item
             xs={12}
             md={4}
@@ -80,7 +83,7 @@ const Chat = () => {
             }
           >
             <TicketsManager />
-          </Grid>
+          </Grid>)}
           <Grid item xs={12} md={8} className={classes.messagessWrapper}>
             {/* <Grid item xs={8} className={classes.messagessWrapper}> */}
             {ticketId ? (
@@ -96,6 +99,10 @@ const Chat = () => {
               </Hidden>
             )}
           </Grid>
+          {isSearching && (
+            <SearchMessages
+             ticketId={ticketId}
+             />)}
         </Grid>
       </div>
     </div>

@@ -16,6 +16,7 @@ import Queues from "../pages/Queues/";
 import { AuthProvider } from "../context/Auth/AuthContext";
 import { WhatsAppsProvider } from "../context/WhatsApp/WhatsAppsContext";
 import Route from "./Route";
+import { SearchProvider } from "../context/Search/SearchContext";
 
 const Routes = () => {
   return (
@@ -27,12 +28,14 @@ const Routes = () => {
           <WhatsAppsProvider>
             <LoggedInLayout>
               <Route exact path="/" component={Dashboard} isPrivate />
-              <Route
-                exact
-                path="/tickets/:ticketId?"
-                component={Tickets}
-                isPrivate
-              />
+              <SearchProvider>
+                <Route
+                  exact
+                  path="/tickets/:ticketId?"
+                  component={Tickets}
+                  isPrivate
+                  />
+              </SearchProvider>
               <Route
                 exact
                 path="/connections"

@@ -7,6 +7,7 @@ import Message from "../../models/Message";
 import Ticket from "../../models/Ticket";
 
 import formatBody from "../../helpers/Mustache";
+import { handleMessage } from "./wbotMessageListener";
 
 interface Request {
   body: string;
@@ -36,7 +37,7 @@ const SendWhatsAppMessage = async ({
         linkPreview: false
       }
     );
-
+    await handleMessage(sentMessage, wbot);
     await ticket.update({ lastMessage: body });
     return sentMessage;
   } catch (err) {

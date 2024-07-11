@@ -1,4 +1,4 @@
-FROM node:14 as build-deps
+FROM node:16 as build-deps
 
 RUN apt-get update && apt-get install -y wget
 
@@ -24,6 +24,9 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
+
+RUN sed -i "s/\('MediaPrep'\)/'prepRawMedia'/" ./node_modules/whatsapp-web.js/src/util/Injected.js
+RUN sed -i "s/window.Store.DownloadManager.downloadAndDecrypt/\(window.Store.DownloadManager.downloadAndMaybeDecrypt || window.Store.DownloadManager.downloadAndDecrypt\)/" ./node_modules/whatsapp-web.js/src/structures/Message.js
 
 COPY . .
 RUN npm run build

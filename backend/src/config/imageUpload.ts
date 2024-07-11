@@ -1,10 +1,13 @@
 import multer from "multer";
 import { v4 } from "uuid";
 import path from "path";
+import fs from "fs";
 
 const storagePermanent = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../../public/uploads"));
+    const imagePath = "../../public/uploads";
+    fs.mkdirSync(path.join(__dirname, imagePath), { recursive: true });
+    cb(null, path.join(__dirname, imagePath));
   },
   filename: (req, file, cb) => {
     const fileName = path.join(v4() + path.extname(file.originalname));
@@ -14,7 +17,9 @@ const storagePermanent = multer.diskStorage({
 
 const storageTemporary = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../../public/uploads/temp"));
+    const imagePath = "../../public/uploads/temp";
+    fs.mkdirSync(path.join(__dirname, imagePath), { recursive: true });
+    cb(null, path.join(__dirname, imagePath));
   },
   filename: (req, file, cb) => {
     const fileName = path.join(v4() + path.extname(file.originalname));

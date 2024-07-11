@@ -4,6 +4,7 @@ import { useHistory } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import { IconButton } from "@material-ui/core";
 import { MoreVert, Replay } from "@material-ui/icons";
+import SearchIcon from "@material-ui/icons/Search";
 
 import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
@@ -11,6 +12,7 @@ import TicketOptionsMenu from "../TicketOptionsMenu";
 import ButtonWithSpinner from "../ButtonWithSpinner";
 import toastError from "../../errors/toastError";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SearchContext } from "../../context/Search/SearchContext";
 
 const useStyles = makeStyles(theme => ({
 	actionButtons: {
@@ -31,6 +33,7 @@ const TicketActionButtons = ({ ticket }) => {
 	const [loading, setLoading] = useState(false);
 	const ticketOptionsMenuOpen = Boolean(anchorEl);
 	const { user } = useContext(AuthContext);
+	const { setIsSearching, isSearching, setSearchSmallOpen } = useContext(SearchContext);
 
 	const handleOpenTicketOptionsMenu = e => {
 		setAnchorEl(e.currentTarget);
@@ -59,6 +62,13 @@ const TicketActionButtons = ({ ticket }) => {
 			toastError(err);
 		}
 	};
+
+	const handleClickSearch = () => {
+		setIsSearching(!isSearching)
+		if (window.innerWidth < 600) {
+			setSearchSmallOpen(!isSearching)
+		}
+	}
 
 	return (
 		<div className={classes.actionButtons}>
@@ -90,6 +100,9 @@ const TicketActionButtons = ({ ticket }) => {
 						onClick={e => handleUpdateTicketStatus(e, "closed", user?.id)}
 					>
 						{i18n.t("messagesList.header.buttons.resolve")}
+					</ButtonWithSpinner>
+					<ButtonWithSpinner onClick={handleClickSearch}>
+						<SearchIcon style={{ color: "gray" }} />
 					</ButtonWithSpinner>
 					<IconButton onClick={handleOpenTicketOptionsMenu}>
 						<MoreVert />
